@@ -378,25 +378,58 @@ def create_app() -> QApplication:
 def main() -> None:
     import sys
 
-    db.init_db()
-
-    salt = db.get_salt()
-    has_existing_salt = salt is not None
-
     app = create_app()
 
-    dlg = MasterPasswordDialog(has_existing_salt)
-    if dlg.exec() != QDialog.DialogCode.Accepted or dlg.password is None:
-        sys.exit(0)
+    db.init_db()
 
-    master_password = dlg.password
-    if not has_existing_salt:
-        salt = generate_salt()
-        db.set_salt(salt)
-    else:
+    salt, verifier = db.get_settings()
+    has_existing_salt = salt is not None
+
+    fernet = None
+
+    while True:
+        dlg = MasterPasswordDialog(has_existing_salt)
+        if dlg.exec() != QDialog.DialogCode.Accepted or dlg.password is None:
+            sys.exit(0)
+
+        master_password = dlg.password
+
+        if not has_existing_salt:
+            # First-time setup: generate salt and verifier using this master password.
+            salt = generate_salt()
+            fernet = build_fernet(master_password, salt)
+            verifier_token = encrypt_password(fernet, "master-password-verifier")
+            db.set_settings(salt, verifier_token)
+            has_existing_salt = True
+            break
+
+        # Existing vault: validate master password by decrypting stored verifier.
         assert salt is not None
+        fernet_candidate = build_fernet(master_password, salt)
+        stored_verifier = db.get_verifier()
+        if stored_verifier is None:
+            # Fallback: no verifier yet (older DB). Initialize it now and accept password.
+            verifier_token = encrypt_password(fernet_candidate, "master-password-verifier")
+            db.set_settings(salt, verifier_token)
+            fernet = fernet_candidate
+            break
 
-    fernet = build_fernet(master_password, salt)
+        try:
+            marker = decrypt_password(fernet_candidate, stored_verifier)
+        except Exception:
+            marker = None
+
+        if marker == "master-password-verifier":
+            fernet = fernet_candidate
+            break
+
+        QMessageBox.critical(
+            None,
+            "Invalid master password",
+            "The master password is incorrect. Please try again.",
+        )
+
+    assert fernet is not None
 
     window = MainWindow(fernet)
     window.show()

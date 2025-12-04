@@ -20,10 +20,18 @@ def init_db() -> None:
         """
         CREATE TABLE IF NOT EXISTS settings (
             id INTEGER PRIMARY KEY CHECK (id = 1),
-            salt BLOB NOT NULL
+            salt BLOB NOT NULL,
+            verifier BLOB
         );
         """
     )
+
+    # For existing databases created before verifier was added, try to add column.
+    try:
+        cur.execute("ALTER TABLE settings ADD COLUMN verifier BLOB;")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
 
     cur.execute(
         """
@@ -78,6 +86,45 @@ def set_salt(salt: bytes) -> None:
     cur.execute("INSERT INTO settings (id, salt) VALUES (1, ?);", (salt,))
     conn.commit()
     conn.close()
+
+
+def get_settings() -> Tuple[Optional[bytes], Optional[bytes]]:
+    """
+    Returns (salt, verifier).
+
+    verifier is an encrypted marker used to validate the master password.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT salt, verifier FROM settings WHERE id = 1;")
+    row = cur.fetchone()
+    conn.close()
+    if row:
+        return row[0], row[1]
+    return None, None
+
+
+def set_settings(salt: bytes, verifier: bytes) -> None:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM settings;")
+    cur.execute(
+        "INSERT INTO settings (id, salt, verifier) VALUES (1, ?, ?);",
+        (salt, verifier),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_verifier() -> Optional[bytes]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT verifier FROM settings WHERE id = 1;")
+    row = cur.fetchone()
+    conn.close()
+    if row:
+        return row[0]
+    return None
 
 
 def list_accounts(
