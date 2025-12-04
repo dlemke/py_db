@@ -32,10 +32,29 @@ def init_db() -> None:
             service TEXT NOT NULL,
             username TEXT NOT NULL,
             password BLOB NOT NULL,
-            notes TEXT
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
         """
     )
+
+    # For existing databases created before timestamps were added, try to add columns.
+    try:
+        cur.execute(
+            "ALTER TABLE accounts ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now'));"
+        )
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+
+    try:
+        cur.execute(
+            "ALTER TABLE accounts ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'));"
+        )
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
 
     conn.commit()
     conn.close()
@@ -61,14 +80,16 @@ def set_salt(salt: bytes) -> None:
     conn.close()
 
 
-def list_accounts(search: str = "") -> List[Tuple[int, str, str, bytes, Optional[str]]]:
+def list_accounts(
+    search: str = "",
+) -> List[Tuple[int, str, str, bytes, Optional[str], str, str]]:
     conn = get_connection()
     cur = conn.cursor()
     if search:
         pattern = f"%{search}%"
         cur.execute(
             """
-            SELECT id, service, username, password, notes
+            SELECT id, service, username, password, notes, created_at, updated_at
             FROM accounts
             WHERE service LIKE ? OR username LIKE ?
             ORDER BY service COLLATE NOCASE;
@@ -78,7 +99,7 @@ def list_accounts(search: str = "") -> List[Tuple[int, str, str, bytes, Optional
     else:
         cur.execute(
             """
-            SELECT id, service, username, password, notes
+            SELECT id, service, username, password, notes, created_at, updated_at
             FROM accounts
             ORDER BY service COLLATE NOCASE;
             """
@@ -114,7 +135,7 @@ def update_account(
     cur.execute(
         """
         UPDATE accounts
-        SET service = ?, username = ?, password = ?, notes = ?
+        SET service = ?, username = ?, password = ?, notes = ?, updated_at = datetime('now')
         WHERE id = ?;
         """,
         (service, username, password, notes, account_id),

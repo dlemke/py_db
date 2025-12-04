@@ -80,6 +80,7 @@ class AccountDialog(QDialog):
         username: str = "",
         password: str = "",
         notes: str = "",
+        require_confirm: bool = False,
     ):
         super().__init__(parent)
         self.setWindowTitle("Account")
@@ -87,28 +88,42 @@ class AccountDialog(QDialog):
         self.username = username
         self.password = password
         self.notes = notes
+        self.require_confirm = require_confirm
 
         self._build_ui()
 
     def _build_ui(self) -> None:
         layout = QGridLayout(self)
 
-        layout.addWidget(QLabel("Service"), 0, 0)
+        row = 0
+        layout.addWidget(QLabel("Service"), row, 0)
         self.service_edit = QLineEdit(self.service)
-        layout.addWidget(self.service_edit, 0, 1)
+        layout.addWidget(self.service_edit, row, 1)
 
-        layout.addWidget(QLabel("Username"), 1, 0)
+        row += 1
+        layout.addWidget(QLabel("Username"), row, 0)
         self.username_edit = QLineEdit(self.username)
-        layout.addWidget(self.username_edit, 1, 1)
+        layout.addWidget(self.username_edit, row, 1)
 
-        layout.addWidget(QLabel("Password"), 2, 0)
+        row += 1
+        layout.addWidget(QLabel("Password"), row, 0)
         self.password_edit = QLineEdit(self.password)
         self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        layout.addWidget(self.password_edit, 2, 1)
+        layout.addWidget(self.password_edit, row, 1)
 
-        layout.addWidget(QLabel("Notes"), 3, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        if self.require_confirm:
+            row += 1
+            layout.addWidget(QLabel("Confirm password"), row, 0)
+            self.password_confirm_edit = QLineEdit()
+            self.password_confirm_edit.setEchoMode(QLineEdit.EchoMode.Password)
+            layout.addWidget(self.password_confirm_edit, row, 1)
+        else:
+            self.password_confirm_edit = None
+
+        row += 1
+        layout.addWidget(QLabel("Notes"), row, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         self.notes_edit = QTextEdit(self.notes)
-        layout.addWidget(self.notes_edit, 3, 1)
+        layout.addWidget(self.notes_edit, row, 1)
 
         buttons = QHBoxLayout()
         save_btn = QPushButton("Save")
@@ -119,7 +134,8 @@ class AccountDialog(QDialog):
         buttons.addWidget(save_btn)
         buttons.addWidget(cancel_btn)
 
-        layout.addLayout(buttons, 4, 0, 1, 2)
+        row += 1
+        layout.addLayout(buttons, row, 0, 1, 2)
         self.resize(420, 260)
 
     def _on_save(self) -> None:
@@ -131,6 +147,12 @@ class AccountDialog(QDialog):
         if not service or not username or not password:
             QMessageBox.warning(self, "Missing data", "Service, username and password are required.")
             return
+
+        if self.require_confirm and self.password_confirm_edit is not None:
+            confirm_pw = self.password_confirm_edit.text()
+            if password != confirm_pw:
+                QMessageBox.warning(self, "Password mismatch", "Passwords do not match.")
+                return
 
         self.service = service
         self.username = username
@@ -175,8 +197,8 @@ class MainWindow(QMainWindow):
         layout.addLayout(top_row)
 
         # Table
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Service", "Username", "Notes"])
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels(["Service", "Username", "Notes", "Last Modified"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -237,7 +259,7 @@ class MainWindow(QMainWindow):
         accounts = db.list_accounts(search)
 
         self.table.setRowCount(0)
-        for row_index, (acc_id, service, username, _pw, notes) in enumerate(accounts):
+        for row_index, (acc_id, service, username, _pw, notes, _created_at, updated_at) in enumerate(accounts):
             self.table.insertRow(row_index)
             service_item = QTableWidgetItem(service)
             # store id in user data
@@ -247,12 +269,14 @@ class MainWindow(QMainWindow):
             self.table.setItem(row_index, 0, service_item)
             self.table.setItem(row_index, 1, username_item)
             self.table.setItem(row_index, 2, notes_item)
+            updated_item = QTableWidgetItem(updated_at)
+            self.table.setItem(row_index, 3, updated_item)
 
         self.table.resizeColumnsToContents()
 
     # CRUD + actions
     def add_account(self) -> None:
-        dlg = AccountDialog(self)
+        dlg = AccountDialog(self, require_confirm=True)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             enc_pw = encrypt_password(self.fernet, dlg.password)
             db.add_account(dlg.service, dlg.username, enc_pw, dlg.notes)
@@ -271,7 +295,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Not found", "Account not found.")
             return
 
-        _, service, username, enc_pw, notes = current
+        _, service, username, enc_pw, notes, _created_at, _updated_at = current
         try:
             password = decrypt_password(self.fernet, enc_pw)
         except Exception:
@@ -288,6 +312,7 @@ class MainWindow(QMainWindow):
             username=username,
             password=password,
             notes=notes or "",
+            require_confirm=False,
         )
         if dlg.exec() == QDialog.DialogCode.Accepted:
             new_enc_pw = encrypt_password(self.fernet, dlg.password)
@@ -321,7 +346,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Not found", "Account not found.")
             return
 
-        _, _service, _username, enc_pw, _notes = current
+        _, _service, _username, enc_pw, _notes, _created_at, _updated_at = current
         try:
             pw = decrypt_password(self.fernet, enc_pw)
         except Exception:
