@@ -10,3 +10,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Build / packaging outputs
+/build/
+/dist/
+/*.spec

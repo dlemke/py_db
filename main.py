@@ -217,29 +217,58 @@ class MainWindow(QMainWindow):
             QWidget {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
                 font-size: 11pt;
+                color: #f5f5f5;
+                background-color: #121212;
             }
             QLineEdit, QTextEdit {
                 padding: 6px;
                 border-radius: 4px;
-                border: 1px solid #cccccc;
+                border: 1px solid #3a3a3a;
+                background-color: #1f1f1f;
+                color: #f5f5f5;
             }
             QLineEdit:focus, QTextEdit:focus {
                 border: 1px solid #4a90e2;
+                background-color: #242424;
+            }
+            QLabel {
+                color: #e0e0e0;
             }
             QPushButton {
                 padding: 6px 12px;
                 border-radius: 4px;
                 background-color: #4a90e2;
-                color: white;
+                color: #ffffff;
+                border: none;
             }
             QPushButton:hover {
                 background-color: #3a7bc4;
             }
             QPushButton:disabled {
-                background-color: #bbbbbb;
+                background-color: #555555;
+                color: #999999;
             }
             QTableWidget {
-                gridline-color: #e0e0e0;
+                background-color: #181818;
+                alternate-background-color: #202020;
+                gridline-color: #333333;
+                color: #f5f5f5;
+                selection-background-color: #263238;
+                selection-color: #ffffff;
+            }
+            QHeaderView::section {
+                background-color: #1f1f1f;
+                color: #e0e0e0;
+                padding: 4px;
+                border: 1px solid #303030;
+            }
+            QScrollBar:vertical, QScrollBar:horizontal {
+                background: #151515;
+                border: none;
+            }
+            QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+                background: #333333;
+                border-radius: 4px;
             }
             """
         )
@@ -372,6 +401,31 @@ def create_app() -> QApplication:
     app = QApplication(sys.argv)
     app.setApplicationName("Simple Password Manager")
     app.setWindowIcon(QtGui.QIcon())  # placeholder, no icon file
+
+    # Use a dark Fusion palette as a base so dialogs/tooltips also look dark.
+    app.setStyle("Fusion")
+    dark_palette = QtGui.QPalette()
+    dark_color = QtGui.QColor(18, 18, 18)
+    disabled_color = QtGui.QColor(127, 127, 127)
+
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Window, dark_color)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.WindowText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(24, 24, 24))
+    dark_palette.setColor(QtGui.QPalette.ColorRole.AlternateBase, QtGui.QColor(32, 32, 32))
+    dark_palette.setColor(QtGui.QPalette.ColorRole.ToolTipBase, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.ToolTipText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Text, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Button, QtGui.QColor(30, 30, 30))
+    dark_palette.setColor(QtGui.QPalette.ColorRole.ButtonText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.BrightText, QtCore.Qt.GlobalColor.red)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Highlight, QtGui.QColor(74, 144, 226))
+    dark_palette.setColor(QtGui.QPalette.ColorRole.HighlightedText, QtCore.Qt.GlobalColor.white)
+
+    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.Text, disabled_color)
+    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.ButtonText, disabled_color)
+
+    app.setPalette(dark_palette)
+
     return app
 
 
