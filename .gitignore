@@ -5,3 +5,8 @@
 *.db-shm
 *.db-wal
 *.db-journal
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
