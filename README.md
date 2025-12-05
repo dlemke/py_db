@@ -18,7 +18,10 @@ It uses **SQLite** to store accounts and **strong symmetric encryption** (via th
 
 ```bash
 pip install -r requirements.txt
+pip install pyinstaller
 ```
+
+(Optional) If you prefer, you can skip the separate `pip install pyinstaller` and let the batch script do it.
 
 ### Running the app
 
@@ -48,4 +51,23 @@ To change master password safely you would need a small migration that decrypts 
 - Clipboard contents are **not cleared automatically**; they stay there until you copy something else.
 - Always keep your master password safe and **do not share it**.
 
+### Build the .exe
 
+You now have two options:
+
+- Option 1 – Use the batch script (simplest)
+  From the project root in Command Prompt or PowerShell:
+  `build_windows.bat`
+
+This will:
+Ensure pyinstaller is installed
+Run PyInstaller with:
+--onefile (single .exe)
+--windowed (no console window)
+Output SimplePasswordManager.exe into the dist folder.
+
+- Option 2 – Run PyInstaller manually
+  From the project root:
+  `py -m PyInstaller --name "SimplePasswordManager" --onefile --windowed main.py`
+
+The resulting dist\SimplePasswordManager.exe should run on Windows 10 and 11 machines that match your architecture (e.g., 64‑bit → 64‑bit). You can copy that single .exe to other PCs; the SQLite DB (passwords.db) will be created alongside the EXE on first run.
