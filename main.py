@@ -66,7 +66,8 @@ class MasterPasswordDialog(QDialog):
     def accept(self) -> None:
         text = self.edit.text().strip()
         if not text:
-            QMessageBox.warning(self, "Missing password", "Please enter a master password.")
+            QMessageBox.warning(self, "Missing password",
+                                "Please enter a master password.")
             return
         self.password = text
         super().accept()
@@ -121,7 +122,8 @@ class AccountDialog(QDialog):
             self.password_confirm_edit = None
 
         row += 1
-        layout.addWidget(QLabel("Notes"), row, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel("Notes"), row, 0,
+                         QtCore.Qt.AlignmentFlag.AlignTop)
         self.notes_edit = QTextEdit(self.notes)
         layout.addWidget(self.notes_edit, row, 1)
 
@@ -145,13 +147,15 @@ class AccountDialog(QDialog):
         notes = self.notes_edit.toPlainText().strip()
 
         if not service or not username or not password:
-            QMessageBox.warning(self, "Missing data", "Service, username and password are required.")
+            QMessageBox.warning(self, "Missing data",
+                                "Service, username and password are required.")
             return
 
         if self.require_confirm and self.password_confirm_edit is not None:
             confirm_pw = self.password_confirm_edit.text()
             if password != confirm_pw:
-                QMessageBox.warning(self, "Password mismatch", "Passwords do not match.")
+                QMessageBox.warning(self, "Password mismatch",
+                                    "Passwords do not match.")
                 return
 
         self.service = service
@@ -198,9 +202,11 @@ class MainWindow(QMainWindow):
 
         # Table
         self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["Service", "Username", "Notes", "Last Modified"])
+        self.table.setHorizontalHeaderLabels(
+            ["Service", "Username", "Notes", "Last Modified"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.setSelectionBehavior(
+            QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
@@ -314,7 +320,8 @@ class MainWindow(QMainWindow):
     def edit_selected(self) -> None:
         acc_id = self._current_account_id()
         if acc_id is None:
-            QMessageBox.information(self, "No selection", "Select an account to edit.")
+            QMessageBox.information(
+                self, "No selection", "Select an account to edit.")
             return
 
         # Load account row from db
@@ -345,13 +352,15 @@ class MainWindow(QMainWindow):
         )
         if dlg.exec() == QDialog.DialogCode.Accepted:
             new_enc_pw = encrypt_password(self.fernet, dlg.password)
-            db.update_account(acc_id, dlg.service, dlg.username, new_enc_pw, dlg.notes)
+            db.update_account(acc_id, dlg.service,
+                              dlg.username, new_enc_pw, dlg.notes)
             self.refresh_table()
 
     def delete_selected(self) -> None:
         acc_id = self._current_account_id()
         if acc_id is None:
-            QMessageBox.information(self, "No selection", "Select an account to delete.")
+            QMessageBox.information(
+                self, "No selection", "Select an account to delete.")
             return
 
         confirm = QMessageBox.question(
@@ -366,7 +375,8 @@ class MainWindow(QMainWindow):
     def copy_password(self) -> None:
         acc_id = self._current_account_id()
         if acc_id is None:
-            QMessageBox.information(self, "No selection", "Select an account first.")
+            QMessageBox.information(
+                self, "No selection", "Select an account first.")
             return
 
         accounts = db.list_accounts()
@@ -409,20 +419,33 @@ def create_app() -> QApplication:
     disabled_color = QtGui.QColor(127, 127, 127)
 
     dark_palette.setColor(QtGui.QPalette.ColorRole.Window, dark_color)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.WindowText, QtCore.Qt.GlobalColor.white)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(24, 24, 24))
-    dark_palette.setColor(QtGui.QPalette.ColorRole.AlternateBase, QtGui.QColor(32, 32, 32))
-    dark_palette.setColor(QtGui.QPalette.ColorRole.ToolTipBase, QtCore.Qt.GlobalColor.white)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.ToolTipText, QtCore.Qt.GlobalColor.white)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.Text, QtCore.Qt.GlobalColor.white)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.Button, QtGui.QColor(30, 30, 30))
-    dark_palette.setColor(QtGui.QPalette.ColorRole.ButtonText, QtCore.Qt.GlobalColor.white)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.BrightText, QtCore.Qt.GlobalColor.red)
-    dark_palette.setColor(QtGui.QPalette.ColorRole.Highlight, QtGui.QColor(74, 144, 226))
-    dark_palette.setColor(QtGui.QPalette.ColorRole.HighlightedText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.WindowText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Base,
+                          QtGui.QColor(24, 24, 24))
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.AlternateBase, QtGui.QColor(32, 32, 32))
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.ToolTipBase, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.ToolTipText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Text,
+                          QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Button,
+                          QtGui.QColor(30, 30, 30))
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.ButtonText, QtCore.Qt.GlobalColor.white)
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.BrightText, QtCore.Qt.GlobalColor.red)
+    dark_palette.setColor(QtGui.QPalette.ColorRole.Highlight,
+                          QtGui.QColor(74, 144, 226))
+    dark_palette.setColor(
+        QtGui.QPalette.ColorRole.HighlightedText, QtCore.Qt.GlobalColor.white)
 
-    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.Text, disabled_color)
-    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled, QtGui.QPalette.ColorRole.ButtonText, disabled_color)
+    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled,
+                          QtGui.QPalette.ColorRole.Text, disabled_color)
+    dark_palette.setColor(QtGui.QPalette.ColorGroup.Disabled,
+                          QtGui.QPalette.ColorRole.ButtonText, disabled_color)
 
     app.setPalette(dark_palette)
 
@@ -452,7 +475,8 @@ def main() -> None:
             # First-time setup: generate salt and verifier using this master password.
             salt = generate_salt()
             fernet = build_fernet(master_password, salt)
-            verifier_token = encrypt_password(fernet, "master-password-verifier")
+            verifier_token = encrypt_password(
+                fernet, "master-password-verifier")
             db.set_settings(salt, verifier_token)
             has_existing_salt = True
             break
@@ -463,7 +487,8 @@ def main() -> None:
         stored_verifier = db.get_verifier()
         if stored_verifier is None:
             # Fallback: no verifier yet (older DB). Initialize it now and accept password.
-            verifier_token = encrypt_password(fernet_candidate, "master-password-verifier")
+            verifier_token = encrypt_password(
+                fernet_candidate, "master-password-verifier")
             db.set_settings(salt, verifier_token)
             fernet = fernet_candidate
             break
@@ -493,5 +518,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

@@ -197,5 +197,3 @@ def delete_account(account_id: int) -> None:
     cur.execute("DELETE FROM accounts WHERE id = ?;", (account_id,))
     conn.commit()
     conn.close()
-
-

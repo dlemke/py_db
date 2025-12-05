@@ -40,5 +40,3 @@ def encrypt_password(fernet: Fernet, plaintext: str) -> bytes:
 
 def decrypt_password(fernet: Fernet, token: bytes) -> str:
     return fernet.decrypt(token).decode("utf-8")
-
-
