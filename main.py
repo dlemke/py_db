@@ -1,6 +1,6 @@
 from typing import Optional
 
-from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
@@ -204,12 +204,16 @@ class MainWindow(QMainWindow):
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(
             ["Service", "Username", "Notes", "Last Modified"])
-        self.table.horizontalHeader().setStretchLastSection(True)
+        header = self.table.horizontalHeader()
+        if header is not None:
+            header.setStretchLastSection(True)
         self.table.setSelectionBehavior(
             QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
-        self.table.verticalHeader().setVisible(False)
+        v_header = self.table.verticalHeader()
+        if v_header is not None:
+            v_header.setVisible(False)
         layout.addWidget(self.table)
 
         self.setCentralWidget(central)
@@ -397,7 +401,8 @@ class MainWindow(QMainWindow):
             return
 
         clipboard = QApplication.clipboard()
-        clipboard.setText(pw)
+        if clipboard is not None:
+            clipboard.setText(pw)
         QMessageBox.information(
             self,
             "Copied",
