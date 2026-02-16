@@ -1,9 +1,9 @@
-## Simple Desktop Password Manager (SQLite + Encryption)
+# Simple Desktop Password Manager (SQLite + Encryption)
 
 This is a small, modern desktop password manager written in Python.  
 It uses **SQLite** to store accounts and **strong symmetric encryption** (via the `cryptography` package) to protect passwords at rest.
 
-### Features
+## Features
 
 - **Desktop UI** built with `PyQt6`
 - **SQLite** database stored locally in `passwords.db`
